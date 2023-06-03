@@ -69,7 +69,16 @@ def generate_response(history, query, btn):
     for char in result['answer']:
         history[-1][-1] += char
         yield history, ''
+#render first page of the PDF when uploaded
+def render_first(btn):
+    
+    doc = fitz.open(btn.name)
+    page = doc[0]
 
+    #Render the page as a PNG image with a resolution of 300 DPI
+    pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
+    image = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
+    return image
 # Function to render a specific page of a PDF file as an image
 def render_file(file):
     global N
