@@ -20,4 +20,4 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 
 # How does the end product look like
 
-![Alt Text](https://imgbox.com/yHoybau5)
+![alt text](https://github.com/sunilkumardash9/pdf-GPT/blob/main/Screenshot from 2023-05-10 22-07-20.png?raw=true)
