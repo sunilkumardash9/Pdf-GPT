@@ -9,7 +9,7 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 4. OpenAI chat model (gpt-3.5-turbo)
 5. Gradio 
 
-# Steps we perform
+# Steps performed
 
 1. Build a chatbot interface using Gradio
 2. Extract texts from pdfs and create embeddings
@@ -17,6 +17,13 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 4. Send query to the backend (Langchain chain)
 5. Perform semantic search over texts to find relevant sources of data
 6. Send data to LLM (ChatGPT) and receive answers on the chatbot
+
+# Access pdf-GPT on Huggingface Space
+
+https://sunilkumardash9-pdf-gpt.hf.space
+
+<gradio-app src="https://sunilkumardash9-pdf-gpt.hf.space"></gradio-app>
+
 
 # How does the end product look like
 
