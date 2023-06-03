@@ -18,3 +18,6 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 5. Perform semantic search over texts to find relevant sources of data
 6. Send data to LLM (ChatGPT) and receive answers on the chatbot
 
+# How does the end product look like
+
+![Alt Text](https://av-eks-lekhak.s3.amazonaws.com/media/__siz…m_2023-05-10_22-07-20-thumbnail_webp-600x300.webp)
