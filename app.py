@@ -1,131 +1,148 @@
+from typing import Any
 import gradio as gr
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 
 from langchain.document_loaders import PyPDFLoader
-import os
 
 import fitz
 from PIL import Image
 
-# Global variables
-COUNT, N = 0, 0
-chat_history = []
-chain = ''
-enable_box = gr.Textbox.update(value=None, placeholder='Upload your OpenAI API key', interactive=True)
-disable_box = gr.Textbox.update(value='OpenAI API key is Set', interactive=False)
+import chromadb
+import re
+import uuid 
 
-# Function to set the OpenAI API key
+enable_box = gr.Textbox.update(value=None,placeholder= 'Upload your OpenAI API key',interactive=True)
+disable_box = gr.Textbox.update(value = 'OpenAI API key is Set',interactive=False)
+
 def set_apikey(api_key):
-    os.environ['OPENAI_API_KEY'] = api_key
-    return disable_box
 
-# Function to enable the API key input box
+        app.OPENAI_API_KEY = api_key
+        
+        return disable_box
+    
 def enable_api_box():
-    return enable_box
+        return enable_box
 
-# Function to add text to the chat history
+
 def add_text(history, text):
     if not text:
-        raise gr.Error('Enter text')
-    history = history + [(text, '')]
+         raise gr.Error('enter text')
+    history = history + [(text,'')] 
     return history
 
-# Function to process the PDF file and create a conversation chain
-def process_file(file):
-    if 'OPENAI_API_KEY' not in os.environ:
-        raise gr.Error('Upload your OpenAI API key')
+class my_app:
+    def __init__(self, OPENAI_API_KEY= None ) -> None:
+        self.OPENAI_API_KEY = OPENAI_API_KEY
+        self.chain = None
+        self.chat_history = []
+        self.N = 0
+        self.count = 0
 
-    loader = PyPDFLoader(file.name)
-    documents = loader.load()
+    def __call__(self, file) -> Any:
+        if self.count==0:
+            print('This is here')
+            self.build_chain(file)
+            self.count+=1
 
-    embeddings = OpenAIEmbeddings()
+        return self.chain
     
-    pdfsearch = Chroma.from_documents(documents, embeddings)
+    def chroma_client(self):
+        #create a chroma client
+        client = chromadb.Client()
+        #create a collecyion
+        collection = client.get_or_create_collection(name="my-collection")
 
-    chain = ConversationalRetrievalChain.from_llm(ChatOpenAI(temperature=0.3), 
+        return client
+    
+    def process_file(self,file):
+
+        loader = PyPDFLoader(file.name)
+        documents = loader.load()  
+        pattern = r"/([^/]+)$"
+        match = re.search(pattern, file.name)
+        file_name = match.group(1)
+        return documents, file_name
+    
+    def build_chain(self, file):
+        documents, file_name = self.process_file(file)
+        #Load embeddings model
+        embeddings = OpenAIEmbeddings(openai_api_key=self.OPENAI_API_KEY) 
+        pdfsearch = Chroma.from_documents(documents, embeddings, collection_name= file_name,)
+
+        chain = ConversationalRetrievalChain.from_llm(ChatOpenAI(temperature=0.0, openai_api_key=self.OPENAI_API_KEY), 
                                                   retriever=pdfsearch.as_retriever(search_kwargs={"k": 1}),
-                                                  return_source_documents=True)
-    return chain
-
-# Function to generate a response based on the chat history and query
-def generate_response(history, query, btn):
-    global COUNT, N, chat_history, chain
+                                                  return_source_documents=True,)
+        return chain
     
-    if not btn:
-        raise gr.Error(message='Upload a PDF')
-    if COUNT == 0:
-        chain = process_file(btn)
-        COUNT += 1
-    
-    result = chain({"question": query, 'chat_history': chat_history}, return_only_outputs=True)
-    chat_history += [(query, result["answer"])]
-    N = list(result['source_documents'][0])[1][1]['page']
 
-    for char in result['answer']:
-        history[-1][-1] += char
-        yield history, ''
-#render first page of the PDF when uploaded
-def render_first(btn):
-    
-    doc = fitz.open(btn.name)
-    page = doc[0]
+def get_response(history, query, file):
+        
+        
+        if not file:
+            raise gr.Error(message='Upload a PDF')
+           
+        chain = app(file)
 
-    #Render the page as a PNG image with a resolution of 300 DPI
-    pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
-    image = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
-    return image
-# Function to render a specific page of a PDF file as an image
+        result = chain({"question": query, 'chat_history':app.chat_history},return_only_outputs=True)
+        app.chat_history += [(query, result["answer"])]
+        app.N = list(result['source_documents'][0])[1][1]['page']
+
+        for char in result['answer']:
+           history[-1][-1] += char
+           yield history,''
+
 def render_file(file):
-    global N
-    doc = fitz.open(file.name)
-    page = doc[N]
-    # Render the page as a PNG image with a resolution of 300 DPI
-    pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
-    image = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
-    return image
+ 
+        doc = fitz.open(file.name)
+        page = doc[app.N]
+        #Render the page as a PNG image with a resolution of 300 DPI
+        pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
+        image = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
+        return image
 
-# Gradio application setup
+def render_first(file):
+        doc = fitz.open(file.name)
+        page = doc[0]
+        #Render the page as a PNG image with a resolution of 300 DPI
+        pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
+        image = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
+        return image,[]
+
+app = my_app()
 with gr.Blocks() as demo:
-
-    # Chatbot and image display sections
+    state = gr.State(uuid.uuid4().hex)
     with gr.Column():
         with gr.Row():
             with gr.Column(scale=0.8):
                 api_key = gr.Textbox(placeholder='Enter OpenAI API key', show_label=False, interactive=True).style(container=False)
             with gr.Column(scale=0.2):
                 change_api_key = gr.Button('Change Key')
-        with gr.Row():
+        with gr.Row():           
             chatbot = gr.Chatbot(value=[], elem_id='chatbot').style(height=650)
-            show_img = gr.Image(label='Upload PDF', tool='select').style(height=680)
-    
-    # Text input and PDF upload sections
+            show_img = gr.Image(label='Upload PDF', tool='select' ).style(height=680)
     with gr.Row():
-        with gr.Column(scale=0.70):
+        with gr.Column(scale=0.60):
             txt = gr.Textbox(
-                show_label=False,
-                placeholder="Enter text and press enter",
-            ).style(container=False)
-        with gr.Column(scale=0.15):
-            submit_btn = gr.Button('Submit')
-        with gr.Column(scale=0.15):
-            btn = gr.UploadButton("📁 Upload a PDF", file_types=[".pdf"]).style()
+                        show_label=False,
+                        placeholder="Enter text and press enter",
+                    ).style(container=False)
+        with gr.Column(scale=0.20):
+            submit_btn = gr.Button('submit')
+        with gr.Column(scale=0.20):
+            btn = gr.UploadButton("📁 upload a PDF", file_types=[".pdf"]).style()
+        
+  
+    api_key.submit(fn=set_apikey, inputs=[api_key], outputs=[api_key,])
+    change_api_key.click(fn= enable_api_box,outputs=[api_key])
+    btn.upload(fn=render_first, inputs=[btn], outputs=[show_img,chatbot],)
     
-    # Set the OpenAI API key and handle interactions
-    api_key.submit(fn=set_apikey, inputs=[api_key], outputs=[api_key])
-    change_api_key.click(fn=enable_api_box, outputs=[api_key])
-    btn.upload(fn=render_first, inputs=[btn], outputs=[show_img])
-    
-    # Perform actions on text input and PDF upload
-    submit_btn.click(fn=add_text, inputs=[chatbot, txt], outputs=[chatbot, ], queue=False).success(fn=generate_response,
-                                  inputs=[chatbot, txt, btn],
-                                  outputs=[chatbot, txt]).success(fn=render_file,
-                                  inputs=[btn], outputs=[show_img])
+    submit_btn.click(fn=add_text, inputs=[chatbot,txt], outputs=[chatbot, ], queue=False).success(fn=get_response,inputs = [chatbot, txt, btn],
+                                    outputs = [chatbot,txt]).success(fn=render_file,inputs = [btn], outputs=[show_img])
 
+    
 demo.queue()
-if __name__ == "__main__":
-    demo.launch()
+demo.launch()  
