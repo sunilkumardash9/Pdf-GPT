@@ -18,12 +18,6 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 5. Perform semantic search over texts to find relevant sources of data
 6. Send data to LLM (ChatGPT) and receive answers on the chatbot
 
-# Access pdf-GPT on Huggingface Space
-
-https://sunilkumardash9-pdf-gpt.hf.space
-
-<gradio-app src="https://sunilkumardash9-pdf-gpt.hf.space"></gradio-app>
-
 
 # How does the end product look like
 
