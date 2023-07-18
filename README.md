@@ -1,6 +1,6 @@
 # Pdf-GPT
 
-This is a Langchain project that enables you to interact with any PDFs via the Gradio chat interface. It not only fetches relevant answers but also renders relevant page of the PDFs.
+This is a Langchain project that enables you to interact with any PDFs via the Gradio chat interface. It not only fetches relevant answers but also renders relevant pages of the PDFs.
 
 # Technologies Used
 1. Langchain
@@ -20,7 +20,7 @@ This is a Langchain project that enables you to interact with any PDFs via the G
 
 # Code walkthrough guide
 
-![Build a ChatGPT for PDFs](https://www.analyticsvidhya.com/blog/2023/05/build-a-chatgpt-for-pdfs-with-langchain/)
+https://www.analyticsvidhya.com/blog/2023/05/build-a-chatgpt-for-pdfs-with-langchain/
 
 
 # How does the end product look like
