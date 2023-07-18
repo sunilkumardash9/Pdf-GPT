@@ -15,8 +15,12 @@ This is Langchain project that enables you to interact with any PDFs via Gradio 
 2. Extract texts from pdfs and create embeddings
 3. Store embeddings in the Chroma vector database
 4. Send query to the backend (Langchain chain)
-5. Perform semantic search over texts to find relevant sources of data
+5. Perform a semantic search over texts to find relevant sources of data
 6. Send data to LLM (ChatGPT) and receive answers on the chatbot
+
+#Code walkthrough guide
+
+![Build a ChatGPT for PDFs](https://www.analyticsvidhya.com/blog/2023/05/build-a-chatgpt-for-pdfs-with-langchain/)
 
 
 # How does the end product look like
